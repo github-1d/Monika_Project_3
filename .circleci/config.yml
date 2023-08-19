@@ -74,6 +74,42 @@ jobs:
           paths: [backend/node_modules]
           key: backend-test
 
+  # Jobs for vulnerability Scanning
+
+  scan-frontend:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [frontend-Scan]
+      - run:
+          name: Scan front-end
+          command: |
+            cd frontend
+            npm install
+            npm audit --audit-level=critical
+      - save_cache:
+          paths: [frontend/node_modules]
+          key: frontend-Scan
+
+  scan-backend:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [backend-Scan]
+      - run:
+          name: Scan Back-end
+          command: |
+            cd backend
+            npm install
+            npm audit --audit-level=critical
+      - save_cache:
+          paths: [backend/node_modules]
+          key: backend-Scan
+
 workflows:
   default:
     jobs:
@@ -83,5 +119,9 @@ workflows:
           requires: [build-frontend]
       - test-backend:
           requires: [build-backend]
+      - scan-frontend:
+          requires: [build-frontend, test-frontend]
+      - scan-backend:
+          requires: [build-backend, test-backend]
 
     
